@@ -1,7 +1,9 @@
 package com.kerneldev.remindfit;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -51,6 +53,12 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        database.close();
+        super.onDestroy();
+    }
+
     public void signup() {
         database = new DBManager(getApplicationContext());
         database.open();
@@ -85,19 +93,24 @@ public class SignupActivity extends AppCompatActivity {
          */
 
 
-        if(database.insertUser(name, email, mobile, password)) onSignupSuccess();
+        int userid = database.insertUser(name, email, mobile, password);
+        if(userid != -1) onSignupSuccess(userid);
         else onSignupFailed();
         progressDialog.dismiss();
     }
 
 
-    public void onSignupSuccess() {
-        database.fetchAll();
+    public void onSignupSuccess(int userid) {
+//        database.fetchAll();
+        SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putBoolean("logged_in", true);
+        editor.putInt("logged_in_user", userid);
+        editor.apply();
 
         database.close();
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
-        Toast.makeText(getBaseContext(), "Signed up", Toast.LENGTH_LONG).show();
         finish();
     }
 
@@ -161,4 +174,6 @@ public class SignupActivity extends AppCompatActivity {
 
         return valid;
     }
+
+
 }

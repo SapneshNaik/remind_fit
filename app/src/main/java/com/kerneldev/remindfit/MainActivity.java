@@ -1,21 +1,35 @@
 package com.kerneldev.remindfit;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    SharedPreferences sharedpreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_main);
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
+
+        sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
+
+        boolean isLoggedIn = sharedpreferences.getBoolean("logged_in", false);
+
+        if(isLoggedIn){
+            Toast.makeText(getBaseContext(), "Welcome", Toast.LENGTH_LONG).show();
+        } else {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -37,6 +51,22 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        //logout option click
+        if (id == R.id.action_logout) {
+            logout();
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    void logout(){
+
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putBoolean("logged_in", false);
+        editor.putInt("logged_in_user", -1);
+        editor.apply();
+
+        Intent loginActivity = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(loginActivity);
     }
 }

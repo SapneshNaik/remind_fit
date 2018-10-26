@@ -1,6 +1,8 @@
 package com.kerneldev.remindfit;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,6 +20,8 @@ import butterknife.ButterKnife;
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
+    private  DBManager database;
+
 
     @BindView(R.id.input_email) EditText _emailText;
     @BindView(R.id.input_password) EditText _passwordText;
@@ -45,17 +49,26 @@ public class LoginActivity extends AppCompatActivity {
                 // Start the Signup activity
                 Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
                 startActivityForResult(intent, REQUEST_SIGNUP);
-                finish();
+//                finish();
                 overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
             }
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        database.close();
+        super.onDestroy();
+    }
+
     public void login() {
+        database = new DBManager(getApplicationContext());
+        database.open();
+
         Log.d(TAG, "Login");
 
         if (!validate()) {
-            onLoginFailed();
+            onLoginFailed(false);
             return;
         }
 
@@ -70,17 +83,12 @@ public class LoginActivity extends AppCompatActivity {
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        // TODO: Implement your own authentication logic here.
+        int userid = database.validUser(email, password);
 
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
-                        // onLoginFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
+        if( userid != -1 ) onLoginSuccess(userid);
+        else onLoginFailed(true);
+
+        progressDialog.dismiss();
     }
 
 
@@ -89,9 +97,10 @@ public class LoginActivity extends AppCompatActivity {
         if (requestCode == REQUEST_SIGNUP) {
             if (resultCode == RESULT_OK) {
 
-                // TODO: Implement successful signup logic here
+                Toast.makeText(getBaseContext(), "Registration successful", Toast.LENGTH_LONG).show();
+
                 // By default we just finish the Activity and log them in automatically
-//                this.finish();
+                this.finish();
             }
         }
     }
@@ -102,13 +111,25 @@ public class LoginActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
-    public void onLoginSuccess() {
+    public void onLoginSuccess(int userid) {
+
+        Toast.makeText(getBaseContext(), "Logged in", Toast.LENGTH_LONG).show();
+
+        SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putBoolean("logged_in", true);
+        editor.putInt("logged_in_user", userid);
+        editor.apply();
+        database.close();
         _loginButton.setEnabled(true);
         finish();
     }
 
-    public void onLoginFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
+    public void onLoginFailed(boolean wrongCreds) {
+
+        if(wrongCreds){
+            Toast.makeText(getBaseContext(), "Invalid email or password", Toast.LENGTH_LONG).show();
+        }
 
         _loginButton.setEnabled(true);
     }
