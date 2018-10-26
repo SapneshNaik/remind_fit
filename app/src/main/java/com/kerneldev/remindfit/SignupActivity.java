@@ -16,9 +16,9 @@ import butterknife.ButterKnife;
 
 public class SignupActivity extends AppCompatActivity {
     private static final String TAG = "SignupActivity";
+    private  DBManager database;
 
     @BindView(R.id.input_name) EditText _nameText;
-    @BindView(R.id.input_address) EditText _addressText;
     @BindView(R.id.input_email) EditText _emailText;
     @BindView(R.id.input_mobile) EditText _mobileText;
     @BindView(R.id.input_password) EditText _passwordText;
@@ -52,6 +52,9 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     public void signup() {
+        database = new DBManager(getApplicationContext());
+        database.open();
+
         Log.d(TAG, "Signup");
 
         if (!validate()) {
@@ -68,30 +71,33 @@ public class SignupActivity extends AppCompatActivity {
         progressDialog.show();
 
         String name = _nameText.getText().toString();
-        String address = _addressText.getText().toString();
         String email = _emailText.getText().toString();
         String mobile = _mobileText.getText().toString();
         String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
 
-        // TODO: Implement your own signup logic here.
+        // TODO: Implement remote authentication server.
 
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onSignupSuccess or onSignupFailed
-                        // depending on success
-                        onSignupSuccess();
-                        // onSignupFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
+        /* NOTE: hashing the password because:
+            1 - The right way is to store user details in a remote server. As it enables use to login
+            from the application on any different device
+            2 - Hashing is a time consuming operation in android, so it should ideally be done
+            on the server
+         */
+
+
+        if(database.insertUser(name, email, mobile, password)) onSignupSuccess();
+        else onSignupFailed();
+        progressDialog.dismiss();
     }
 
 
     public void onSignupSuccess() {
+        database.fetchAll();
+
+        database.close();
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
+        Toast.makeText(getBaseContext(), "Signed up", Toast.LENGTH_LONG).show();
         finish();
     }
 
@@ -105,7 +111,6 @@ public class SignupActivity extends AppCompatActivity {
         boolean valid = true;
 
         String name = _nameText.getText().toString();
-        String address = _addressText.getText().toString();
         String email = _emailText.getText().toString();
         String mobile = _mobileText.getText().toString();
         String password = _passwordText.getText().toString();
@@ -118,27 +123,27 @@ public class SignupActivity extends AppCompatActivity {
             _nameText.setError(null);
         }
 
-        if (address.isEmpty()) {
-            _addressText.setError("Enter Valid Address");
-            valid = false;
-        } else {
-            _addressText.setError(null);
-        }
-
 
         if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailText.setError("enter a valid email address");
+            _emailText.setError("Enter a valid email address");
+            valid = false;
+        } else if(database.emailExists(email)){
+            _emailText.setError("Email already taken");
             valid = false;
         } else {
             _emailText.setError(null);
         }
 
+
         if (mobile.isEmpty() || mobile.length()!=10) {
             _mobileText.setError("Enter Valid Mobile Number");
             valid = false;
-        } else {
-            _mobileText.setError(null);
-        }
+        } else if(database.mobileExists(mobile)){
+            _mobileText.setError("Mobile already taken");
+            valid = false;
+        } else _mobileText.setError(null);
+
+
 
         if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
             _passwordText.setError("between 4 and 10 alphanumeric characters");
