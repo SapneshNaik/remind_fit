@@ -55,7 +55,9 @@ public class SignupActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        database.close();
+        if(database != null){
+            database.close();
+        }
         super.onDestroy();
     }
 
@@ -102,15 +104,20 @@ public class SignupActivity extends AppCompatActivity {
 
     public void onSignupSuccess(int userid) {
 //        database.fetchAll();
-        SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedpreferences.edit();
-        editor.putBoolean("logged_in", true);
-        editor.putInt("logged_in_user", userid);
-        editor.apply();
+//        SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedpreferences.edit();
+//        editor.putBoolean("is_logged_in", true);
+//        editor.putInt("logged_in_user", userid);
+//        editor.apply();
 
         database.close();
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
+
+        Toast.makeText(getBaseContext(), "Registration successful", Toast.LENGTH_LONG).show();
+
+        Intent i = new Intent(getApplicationContext(), LoginActivity.class);
+        startActivity(i);
         finish();
     }
 

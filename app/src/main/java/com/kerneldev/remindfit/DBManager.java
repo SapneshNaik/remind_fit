@@ -40,11 +40,13 @@ public class DBManager {
         return (int) userid;
     }
 
-    public Cursor fetchUser(String email) {
+    public Cursor fetchUser(int id) {
         String[] columns = new String[] { DBHelper._ID, DBHelper.NAME, DBHelper.EMAIL, DBHelper.MOBILE };
-        Cursor cursor = database.query(DBHelper.USER_TABLE, columns,  DBHelper.EMAIL+"=?", new String[] { email }, null, null, null);
+        Cursor cursor = database.query(DBHelper.USER_TABLE, columns,  DBHelper._ID+"=?", new String[] { String.valueOf(id) }, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
+            Log.v("fetchUser", DatabaseUtils.dumpCursorToString(cursor));
+
         }
         return cursor;
     }

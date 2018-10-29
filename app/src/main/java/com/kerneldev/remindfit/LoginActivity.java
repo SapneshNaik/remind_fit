@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
-        
+
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -57,7 +57,9 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        database.close();
+        if(database != null){
+            database.close();
+        }
         super.onDestroy();
     }
 
@@ -97,7 +99,6 @@ public class LoginActivity extends AppCompatActivity {
         if (requestCode == REQUEST_SIGNUP) {
             if (resultCode == RESULT_OK) {
 
-                Toast.makeText(getBaseContext(), "Registration successful", Toast.LENGTH_LONG).show();
 
                 // By default we just finish the Activity and log them in automatically
                 this.finish();
@@ -117,7 +118,7 @@ public class LoginActivity extends AppCompatActivity {
 
         SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedpreferences.edit();
-        editor.putBoolean("logged_in", true);
+        editor.putBoolean("is_logged_in", true);
         editor.putInt("logged_in_user", userid);
         editor.apply();
         database.close();
