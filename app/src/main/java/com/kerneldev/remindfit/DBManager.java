@@ -101,5 +101,30 @@ public class DBManager {
         }
     }
 
+
+    int insertUserDetails(int user_id,  String sex, int weight, int height, String blood_group, int age, String start_time, String end_time ) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DBHelper.USER_ID, user_id);
+        contentValue.put(DBHelper.SEX, sex);
+        contentValue.put(DBHelper.WEIGHT, weight);
+        contentValue.put(DBHelper.HEIGHT, height);
+        contentValue.put(DBHelper.BLOOD_GROUP, blood_group);
+        contentValue.put(DBHelper.AGE, age);
+        contentValue.put(DBHelper.START_TIME, start_time);
+        contentValue.put(DBHelper.END_TIME, end_time);
+
+        long user_details_id = database.insert(DBHelper.USER_DETAILS_TABLE, null, contentValue);
+        return (int) user_details_id;
+    }
+
+    public Cursor fetchUserDetails(int userID) {
+        String[] columns = new String[] { DBHelper.SEX, DBHelper.WEIGHT, DBHelper.HEIGHT, DBHelper.BLOOD_GROUP, DBHelper.AGE, DBHelper.START_TIME, DBHelper.END_TIME };
+        Cursor cursor = database.query(DBHelper.USER_DETAILS_TABLE, columns,  DBHelper.USER_ID+"=?", new String[] { String.valueOf(userID) }, null, null, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+        return cursor;
+    }
+
 }
 

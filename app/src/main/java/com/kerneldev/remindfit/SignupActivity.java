@@ -62,15 +62,17 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     public void signup() {
+
+
         database = new DBManager(getApplicationContext());
         database.open();
-
-        Log.d(TAG, "Signup");
 
         if (!validate()) {
             onSignupFailed();
             return;
         }
+
+
 
         _signupButton.setEnabled(false);
 

@@ -19,6 +19,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,16 +28,19 @@ import android.widget.Toast;
 import java.util.Locale;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    SharedPreferences sharedpreferences;
-    ImageView _hamMenu;
+    @BindView(R.id.ham_menu) ImageView _hamMenu;
     DrawerLayout _navDrawer;
-    TextView _appName;
+    @BindView(R.id.app_name) TextView _appName;
+    @BindView(R.id.nav_view) NavigationView _navigationView;
+
+    SharedPreferences sharedpreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,30 +48,27 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().hide();
         setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
+        _navDrawer = findViewById(R.id.drawer_layout);
 
         Typeface custom_font = Typeface.createFromAsset(getAssets(),  "RockSalt.ttf");
 
-        _appName = findViewById(R.id.app_name);
         _appName.setTypeface(custom_font);
 
         sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
 
-
-        _hamMenu = findViewById(R.id.ham_menu);
         _hamMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                _navDrawer = findViewById(R.id.drawer_layout);
                 if(!_navDrawer.isDrawerOpen(GravityCompat.START)) _navDrawer.openDrawer(Gravity.START);
                 else _navDrawer.closeDrawer(Gravity.END);
             }
         });
 
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        _navigationView.setNavigationItemSelectedListener(this);
 
 
     }
@@ -118,9 +119,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+        _navDrawer = findViewById(R.id.drawer_layout);
+
+        if (_navDrawer.isDrawerOpen(GravityCompat.START)) {
+            _navDrawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
         }
@@ -130,15 +132,18 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
+        _navDrawer = findViewById(R.id.drawer_layout);
 
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        _navDrawer.closeDrawer(GravityCompat.START);
 
         int id = item.getItemId();
 
         if (id == R.id.nav_logout) {
             logout();
             // Handle the camera action
+        } else if (id == R.id.nav_profile){
+            Intent profileActivity = new Intent(getApplicationContext(), ProfileActivity.class);
+            startActivity(profileActivity);
         }
 
         return true;
@@ -190,8 +195,8 @@ public class MainActivity extends AppCompatActivity
 
 
     void setNavDrawer(){
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        View headerView = navigationView.getHeaderView(0);
+
+        View headerView = _navigationView.getHeaderView(0);
         TextView navDrawerName =  headerView.findViewById(R.id.nav_drawer_name);
         TextView navDrawerEmail =  headerView.findViewById(R.id.nav_drawer_email);
         navDrawerEmail.setText(sharedpreferences.getString("user_email", null));
