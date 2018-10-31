@@ -8,6 +8,9 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class DBManager {
     private DBHelper dbHelper;
 
@@ -139,12 +142,27 @@ public class DBManager {
 
     Cursor fetchNextActivity(int userID){
 
-        String sql = "SELECT * FROM 'activities' where _id NOT IN ( SELECT activity_id FROM user_activities WHERE user_id="+userID+") LIMIT 1";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String date = sdf.format(new Date());
+        Log.v("DEBUG", String.valueOf(userID));
+
+        String sql = "SELECT * FROM 'activities' where _id NOT IN ( SELECT activity_id FROM user_activities WHERE user_id="+userID+"  AND completed_at='"+date+"' ) LIMIT 1";
+        Log.v("sql query",sql);
+
         Cursor cursor = database.rawQuery(sql, null);
         if (cursor != null) {
             cursor.moveToFirst();
         }
         return cursor;
+    }
+
+    int insertNewUserActivity(int userID,  int activityID, String completedAT ) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DBHelper.USER_ID, userID);
+        contentValue.put(DBHelper.ACTIVITY_ID, activityID);
+        contentValue.put(DBHelper.ACTIVITY_COMPLETED_AT, completedAT);
+        long user_details_id = database.insert(DBHelper.USER_ACTIVITY_TABLE, null, contentValue);
+        return (int) user_details_id;
     }
 
 }

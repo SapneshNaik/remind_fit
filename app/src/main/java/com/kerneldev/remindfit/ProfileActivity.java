@@ -1,6 +1,9 @@
 package com.kerneldev.remindfit;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -18,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Objects;
 
 import butterknife.BindView;
@@ -43,7 +47,8 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
     public static final String TIMERANGEPICKER_TAG = "timerangepicker";
 
-
+    private AlarmManager alarmMgr;
+    private PendingIntent alarmIntent;
     View.OnClickListener showTimePicker = new View.OnClickListener() {
         @Override
         public void onClick(final View v) {
@@ -81,6 +86,23 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
                 }
 
                 database.close();
+
+                alarmMgr = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+
+                Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+
+                alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 777, intent, 0);
+
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(System.currentTimeMillis());
+                calendar.set(Calendar.HOUR_OF_DAY, 14);
+                calendar.set(Calendar.MINUTE, 58);
+
+                // setRepeating() lets you specify a precise custom interval--in this case,
+                // 20 minutes.
+
+                alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 1000 * 60 * 1, alarmIntent);
 
             } else {
                 Toast.makeText(getApplicationContext(), "Invalid details", Toast.LENGTH_LONG).show();

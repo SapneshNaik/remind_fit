@@ -40,8 +40,7 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.nav_view) NavigationView _navigationView;
 
     SharedPreferences sharedpreferences;
-    private AlarmManager alarmMgr;
-    private PendingIntent alarmIntent;
+
 
 
     @Override
@@ -74,25 +73,7 @@ public class MainActivity extends AppCompatActivity
 
         _navigationView.setNavigationItemSelectedListener(this);
 
-//        populateActivityTable();
-
-
-        alarmMgr = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
-
-        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-
-        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 777, intent, 0);
-
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        calendar.set(Calendar.HOUR_OF_DAY, 14);
-        calendar.set(Calendar.MINUTE, 58);
-
-        // setRepeating() lets you specify a precise custom interval--in this case,
-        // 20 minutes.
-
-        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 1000 * 60 * 2, alarmIntent);
+        populateActivityTable();
 
     }
 
@@ -249,7 +230,7 @@ public class MainActivity extends AppCompatActivity
         DBManager database = new DBManager(getApplicationContext());
         database.open();
 
-        String[] activities = {"Drink Water", "Meditate", "Do PUSHUPs", "Do PULLUPs", "Short Run", "Eye Exercise"};
+        String[] activities = {"Drink Water", "Meditate", "Do Push Ups", "Do Pull Ups", "Short Run", "Eye Exercise"};
 
         for (String activity : activities) {
             //resource string is activity name without spaces and lowercase
