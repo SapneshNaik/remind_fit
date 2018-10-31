@@ -196,9 +196,9 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
                 _femaleRadio.setChecked(true);
             }
 
-            _weightInput.setText(cursor.getInt(cursor.getColumnIndex(DBHelper.WEIGHT)));
-            _heightInput.setText(cursor.getInt(cursor.getColumnIndex(DBHelper.HEIGHT)));
-            _ageInput.setText(cursor.getInt(cursor.getColumnIndex(DBHelper.AGE)));
+            _weightInput.setText(cursor.getString(cursor.getColumnIndex(DBHelper.WEIGHT)));
+            _heightInput.setText(cursor.getString(cursor.getColumnIndex(DBHelper.HEIGHT)));
+            _ageInput.setText(cursor.getString(cursor.getColumnIndex(DBHelper.AGE)));
 
             String time = cursor.getString(cursor.getColumnIndex(DBHelper.START_TIME)) + " - " + cursor.getString(cursor.getColumnIndex(DBHelper.END_TIME));
 

@@ -45,8 +45,6 @@ public class DBManager {
         Cursor cursor = database.query(DBHelper.USER_TABLE, columns,  DBHelper._ID+"=?", new String[] { String.valueOf(id) }, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
-            Log.v("fetchUser", DatabaseUtils.dumpCursorToString(cursor));
-
         }
         return cursor;
     }
