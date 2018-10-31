@@ -111,6 +111,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 28 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: com.amitshekhar.android:debug-db-1.0.4" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:customview-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.jakewharton:butterknife-8.8.1" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:localbroadcastmanager-28.0.0" level="project" />
@@ -122,12 +123,14 @@
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:viewmodel-1.1.1" level="project" />
     <orderEntry type="library" name="Gradle: com.jakewharton:butterknife-annotations:8.8.1@jar" level="project" />
     <orderEntry type="library" name="Gradle: de.hdodenhof:circleimageview-2.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: net.zetetic:android-database-sqlcipher-3.5.7" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:cardview-v7-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:drawerlayout-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:coordinatorlayout-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:collections:28.0.0@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:documentfile-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support.constraint:constraint-layout-1.1.3" level="project" />
+    <orderEntry type="library" name="Gradle: android.arch.persistence.room:common:1.1.0@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:swiperefreshlayout-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.github.tittojose:timerangepicker-library-0.2" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:recyclerview-v7-28.0.0" level="project" />
@@ -137,9 +140,13 @@
     <orderEntry type="library" name="Gradle: android.arch.lifecycle:livedata-1.1.1" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.core:common:1.1.1@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:versionedparcelable-28.0.0" level="project" />
+    <orderEntry type="library" name="Gradle: android.arch.persistence:db-framework-1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: android.arch.core:runtime-1.1.1" level="project" />
+    <orderEntry type="library" name="Gradle: android.arch.persistence:db-1.1.0" level="project" />
+    <orderEntry type="library" name="Gradle: android.arch.persistence.room:runtime-1.1.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:print-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:loader-28.0.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.2@jar" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:viewpager-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:transition-28.0.0" level="project" />
     <orderEntry type="library" name="Gradle: com.android.support:support-fragment-28.0.0" level="project" />

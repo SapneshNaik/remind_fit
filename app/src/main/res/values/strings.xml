@@ -14,6 +14,8 @@
     <string name="nav_header_title">Sapnesh Naissk</string>
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
+    <string name="channel_name">remind_fit</string>
+    <string name="channel_description">Notification channel for the healthcare app Remind Fit</string>
 
     <string-array name="blood_groups">
         <item>A +ve</item>
@@ -25,5 +27,12 @@
         <item>AB +ve</item>
         <item>AB -ve</item>
     </string-array>
-
+    <string-array name="activities">
+        <item>Drink Water</item>
+        <item>Meditate</item>
+        <item>Do Pushups</item>
+        <item>Do Pullups</item>
+        <item>Short Run</item>
+        <item>Eye exercise</item>
+    </string-array>
 </resources>

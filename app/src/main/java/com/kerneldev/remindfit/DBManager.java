@@ -124,5 +124,28 @@ public class DBManager {
         return cursor;
     }
 
+
+    int insertNewActivity(String name,  String resource, String type ) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DBHelper.NAME, name);
+        contentValue.put(DBHelper.ACTIVITY_RESOURCE, resource);
+        contentValue.put(DBHelper.ACTIVITY_TYPE, type);
+        long user_details_id = database.insert(DBHelper.ACTIVITY_TABLE, null, contentValue);
+        return (int) user_details_id;
+    }
+
+
+    //SELECT * FROM 'activities' where _id NOT IN ( SELECT activity_id FROM user_activities WHERE user_id=1);
+
+    Cursor fetchNextActivity(int userID){
+
+        String sql = "SELECT * FROM 'activities' where _id NOT IN ( SELECT activity_id FROM user_activities WHERE user_id="+userID+") LIMIT 1";
+        Cursor cursor = database.rawQuery(sql, null);
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+        return cursor;
+    }
+
 }
 

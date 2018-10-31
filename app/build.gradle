@@ -29,4 +29,5 @@ dependencies {
     implementation 'com.android.support:cardview-v7:28.0.0'
     implementation 'de.hdodenhof:circleimageview:2.2.0'
     implementation 'com.github.tittojose:timerangepicker-library:0.2'
+    debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
 }

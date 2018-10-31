@@ -4,14 +4,17 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.graphics.Typeface;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Arrays;
@@ -32,6 +35,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
     @BindView(R.id.age) TextInputEditText _ageInput;
     @BindView(R.id.user_weight) TextInputEditText _weightInput;
     @BindView(R.id.user_height) TextInputEditText _heightInput;
+    @BindView(R.id.app_name) TextView _appName;
 
     SharedPreferences sharedpreferences;
     DBManager database;
@@ -132,6 +136,9 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
         setContentView(R.layout.activity_profile);
         ButterKnife.bind(this);
 
+        Typeface custom_font = Typeface.createFromAsset(getAssets(),  "RockSalt.ttf");
+        _appName.setTypeface(custom_font);
+
         _timePeriodSelectButton.setOnClickListener(showTimePicker);
         _saveProfDetails.setOnClickListener(saveDetais);
         sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
@@ -205,6 +212,17 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
             _timePeriodSelectButton.setText(time);
 
             Log.v("Userdetails",  DatabaseUtils.dumpCursorToString(cursor));
+
+
+            //set blood group spinner value
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.blood_groups, android.R.layout.simple_spinner_item);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            _bloodGroups.setAdapter(adapter);
+
+            int spinnerPosition = adapter.getPosition(cursor.getString(cursor.getColumnIndex(DBHelper.BLOOD_GROUP)));
+            _bloodGroups.setSelection(spinnerPosition);
+
+
         }
 
         cursor.close();

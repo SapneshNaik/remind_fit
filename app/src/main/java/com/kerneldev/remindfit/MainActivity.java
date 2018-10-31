@@ -1,46 +1,48 @@
 package com.kerneldev.remindfit;
 
-import android.app.ActionBar;
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Locale;
+import java.util.Calendar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final String CHANNEL_ID = "remind_fit";
     @BindView(R.id.ham_menu) ImageView _hamMenu;
     DrawerLayout _navDrawer;
     @BindView(R.id.app_name) TextView _appName;
     @BindView(R.id.nav_view) NavigationView _navigationView;
 
     SharedPreferences sharedpreferences;
+    private AlarmManager alarmMgr;
+    private PendingIntent alarmIntent;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +51,8 @@ public class MainActivity extends AppCompatActivity
         setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        createNotificationChannel();
 
         _navDrawer = findViewById(R.id.drawer_layout);
 
@@ -70,6 +74,25 @@ public class MainActivity extends AppCompatActivity
 
         _navigationView.setNavigationItemSelectedListener(this);
 
+//        populateActivityTable();
+
+
+        alarmMgr = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+
+        alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 777, intent, 0);
+
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.HOUR_OF_DAY, 14);
+        calendar.set(Calendar.MINUTE, 58);
+
+        // setRepeating() lets you specify a precise custom interval--in this case,
+        // 20 minutes.
+
+        alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 1000 * 60 * 2, alarmIntent);
 
     }
 
@@ -88,6 +111,23 @@ public class MainActivity extends AppCompatActivity
         setUserPreferences();
         setNavDrawer();
         super.onResume();
+    }
+
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     //    @Override
@@ -179,6 +219,7 @@ public class MainActivity extends AppCompatActivity
             unSetUserPreferences();
         }
         cursor.close();
+        database.close();
 
     }
 
@@ -203,6 +244,22 @@ public class MainActivity extends AppCompatActivity
         navDrawerName.setText(sharedpreferences.getString("user_name", null));
     }
 
+
+    void populateActivityTable(){
+        DBManager database = new DBManager(getApplicationContext());
+        database.open();
+
+        String[] activities = {"Drink Water", "Meditate", "Do PUSHUPs", "Do PULLUPs", "Short Run", "Eye Exercise"};
+
+        for (String activity : activities) {
+            //resource string is activity name without spaces and lowercase
+            if (database.insertNewActivity(activity, activity.replaceAll("[^A-Za-z]+", "").toLowerCase(), "fitness") == -1){
+                Log.e("populateActivityTable", "Error inseting "+activity);
+            }
+        }
+
+        database.close();
+    }
 
 
 }
