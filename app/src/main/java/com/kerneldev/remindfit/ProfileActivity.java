@@ -15,6 +15,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -159,21 +160,15 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
             }
         });
 
-        database = new DBManager(getApplicationContext());
-        database.open();
 
 
-        Cursor c = database.fetchUserDetails(sharedpreferences.getInt("logged_in_user", -1));
 
-        Log.v("Userdetails",  DatabaseUtils.dumpCursorToString(c));
-
-        c.close();
-        database.close();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        populateDetails();
 
     }
 
@@ -184,5 +179,36 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
         _timePeriodSelectButton.setText(startTime + " - " + endTime);
     }
 
+
+    void populateDetails(){
+
+        database = new DBManager(getApplicationContext());
+        database.open();
+        Cursor cursor = database.fetchUserDetails(sharedpreferences.getInt("logged_in_user", -1));
+        if((cursor != null) && (cursor.getCount() > 0)){
+
+            //set gender(sex)
+            if (cursor.getString(cursor.getColumnIndex(DBHelper.SEX)).equals("male")) {
+                _maleRadio.setChecked(true);
+                _femaleRadio.setChecked(false);
+            } else {
+                _maleRadio.setChecked(false);
+                _femaleRadio.setChecked(true);
+            }
+
+            _weightInput.setText(cursor.getInt(cursor.getColumnIndex(DBHelper.WEIGHT)));
+            _heightInput.setText(cursor.getInt(cursor.getColumnIndex(DBHelper.HEIGHT)));
+            _ageInput.setText(cursor.getInt(cursor.getColumnIndex(DBHelper.AGE)));
+
+            String time = cursor.getString(cursor.getColumnIndex(DBHelper.START_TIME)) + " - " + cursor.getString(cursor.getColumnIndex(DBHelper.END_TIME));
+
+            _timePeriodSelectButton.setText(time);
+
+            Log.v("Userdetails",  DatabaseUtils.dumpCursorToString(cursor));
+        }
+
+        cursor.close();
+        database.close();
+    }
 
 }
