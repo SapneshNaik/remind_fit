@@ -16,6 +16,7 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="channel_name">remind_fit</string>
     <string name="channel_description">Notification channel for the healthcare app Remind Fit</string>
+    <string name="app_profile_folder">profile_images</string>
 
     <string-array name="blood_groups">
         <item>A +ve</item>

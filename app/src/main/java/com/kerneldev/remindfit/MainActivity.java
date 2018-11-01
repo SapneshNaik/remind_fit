@@ -8,9 +8,11 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +35,7 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,6 +43,7 @@ import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import de.hdodenhof.circleimageview.CircleImageView;
 
 
 public class MainActivity extends AppCompatActivity
@@ -53,6 +59,9 @@ public class MainActivity extends AppCompatActivity
     NavigationView _navigationView;
     @BindView(R.id.bar_chart)
     BarChart barChart;
+
+    @BindView(R.id.profile_image)
+    CircleImageView _profileImage;
 
     TextView _taskToday;
     TextView _taskCompleted;
@@ -71,6 +80,7 @@ public class MainActivity extends AppCompatActivity
         setTheme(R.style.AppTheme);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
 
         createNotificationChannel();
 
@@ -99,6 +109,33 @@ public class MainActivity extends AppCompatActivity
 
 
         setActivityBarChart();
+
+
+    }
+
+    private void setProfileImages() {
+       String name =  sharedpreferences.getInt("logged_in_user", -1)+ ".jpg";
+
+        String dirPath = getFilesDir().getAbsolutePath() + File.separator + getString(R.string.app_profile_folder);
+
+        name = dirPath + File.separator + name;
+
+        File file = new File(name);
+        if(file.exists()){
+            Uri uri = Uri.parse(name);
+
+            _profileImage.setImageURI(null);
+            _profileImage.setImageURI(uri);
+
+            View headerView = _navigationView.getHeaderView(0);
+
+            CircleImageView _navProfImage = headerView.findViewById(R.id.nav_drawer_profile);
+            _navProfImage.setImageURI(null);
+
+            _navProfImage.setImageURI(uri);
+
+        }
+
     }
 
     private int[] getColors() {
@@ -118,6 +155,7 @@ public class MainActivity extends AppCompatActivity
 
         if (isLoggedIn) {
             Toast.makeText(getBaseContext(), "Welcome Back!", Toast.LENGTH_SHORT).show();
+            setProfileImages();
         } else {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
@@ -125,8 +163,11 @@ public class MainActivity extends AppCompatActivity
 
         setUserPreferences();
         setNavDrawer();
+
         super.onResume();
     }
+
+
 
 
     private void createNotificationChannel() {

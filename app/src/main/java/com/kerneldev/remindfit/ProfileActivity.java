@@ -1,14 +1,23 @@
 package com.kerneldev.remindfit;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputEditText;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,16 +29,28 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import de.hdodenhof.circleimageview.CircleImageView;
 import me.tittojose.www.timerangepicker_library.TimeRangePickerDialog;
 
 public class ProfileActivity extends AppCompatActivity implements TimeRangePickerDialog.OnTimeRangeSelectedListener {
 
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 0;
     @BindView(R.id.select_time_period)
     Button _timePeriodSelectButton;
     @BindView(R.id.save_prof_details)
@@ -50,10 +71,22 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
     @BindView(R.id.app_name)
     TextView _appName;
 
+    @BindView(R.id.uploadProfileImage)
+    FloatingActionButton _uploadImageB;
+
+
+    @BindView(R.id.profile_image)
+    CircleImageView _profileImage;
+
     SharedPreferences sharedpreferences;
     DBManager database;
     String sex = "male";
     Boolean dataExists = false;
+
+    Uri imageUri;
+
+    int userId;
+
 
     public static final String TIMERANGEPICKER_TAG = "timerangepicker";
 
@@ -83,7 +116,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
                 String endTime = times[1];
 
 
-                int userId = sharedpreferences.getInt("logged_in_user", -1);
+                userId = sharedpreferences.getInt("logged_in_user", -1);
 
                 if (userId != -1) {
                     database = new DBManager(getApplicationContext());
@@ -131,14 +164,156 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
                 }
 
 
-
-
             } else {
                 Toast.makeText(getApplicationContext(), "Invalid details", Toast.LENGTH_LONG).show();
             }
         }
 
     };
+
+
+    View.OnClickListener uploadImage = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+            photoPickerIntent.setType("image/*");
+            startActivityForResult(photoPickerIntent, 1);
+        }
+    };
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1)
+            if (resultCode == Activity.RESULT_OK) {
+                imageUri = data.getData();
+
+                _profileImage.setImageURI(imageUri);
+
+//                _uploadImageB.setVisibility(View.GONE);
+
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    askStoragePermission();
+                } else {
+
+                    try {
+                        saveProfileImage(imageUri);
+                    } catch (IOException e) {
+                        Toast.makeText(this, "There was an error", Toast.LENGTH_LONG).show();
+                        Log.e("Imageerror", "exception", e);
+                    }
+                }
+            }
+    }
+
+
+    void askStoragePermission() {
+
+        // Permission is not granted
+        // Should we show an explanation?
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            // Show an explanation to the user *asynchronously* -- don't block
+            // this thread waiting for the user's response! After the user
+            // sees the explanation, try again to request the permission.
+        } else {
+            // No explanation needed; request the permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
+
+            // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+            // app-defined int constant. The callback method gets the
+            // result of the request.
+        }
+
+
+    }
+
+
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_WRITE_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+
+                    try {
+                        saveProfileImage(imageUri);
+                    } catch (IOException e) {
+                        Toast.makeText(this, "There was an error", Toast.LENGTH_LONG).show();
+                        Log.e("Imageerror", "exception", e);
+                    }
+
+
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.v("StoragePerm", "denied");
+
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
+
+    String createProfileImagesFolder() {
+        String dirPath = getFilesDir().getAbsolutePath() + File.separator + getString(R.string.app_profile_folder);
+        File projDir = new File(dirPath);
+        if (!projDir.exists())
+            projDir.mkdirs();
+
+        return dirPath;
+
+    }
+
+    private void saveProfileImage(Uri imageUri) throws IOException {
+
+        String dir = createProfileImagesFolder();
+
+        String name = sharedpreferences.getInt("logged_in_user", -1)+ ".jpg";
+
+        final int chunkSize = 1024;  // We'll read in one kB at a time
+        byte[] imageData = new byte[chunkSize];
+
+        File file = new File(dir, name);
+
+        InputStream in = getContentResolver().openInputStream(imageUri);
+        OutputStream out = new FileOutputStream(file);  // I'm assuming you already have the File object for where you're writing to
+
+        try {
+            int bytesRead;
+            while ((bytesRead = in.read(imageData)) > 0) {
+                out.write(Arrays.copyOfRange(imageData, 0, Math.max(0, bytesRead)));
+            }
+
+        } catch (Exception ex) {
+            Log.e("Something went wrong.", "sd", ex);
+        } finally {
+            in.close();
+            out.close();
+        }
+    }
+
+    public String getPath(Uri uri) {
+        String[] projection = {MediaStore.MediaColumns.DATA};
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        int column_index = cursor
+                .getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        cursor.moveToFirst();
+//        String imagePath = cursor.getString(column_index);
+
+        return cursor.getString(column_index);
+    }
+
 
     void onSaveDetailSuccess() {
         Toast.makeText(getApplicationContext(), "Details Saved", Toast.LENGTH_SHORT).show();
@@ -222,6 +397,8 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
             }
         });
 
+        _uploadImageB.setOnClickListener(uploadImage);
+
 
     }
 
@@ -229,6 +406,25 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
     protected void onResume() {
         super.onResume();
         populateDetails();
+        setProfileImages();
+
+    }
+
+
+    private void setProfileImages() {
+        String name =  sharedpreferences.getInt("logged_in_user", -1)+ ".jpg";
+
+        String dirPath = getFilesDir().getAbsolutePath() + File.separator + getString(R.string.app_profile_folder);
+
+        name = dirPath + File.separator + name;
+
+        File file = new File(name);
+        if(file.exists()){
+            Uri uri = Uri.parse(name);
+
+            _profileImage.setImageURI(uri);
+//            _uploadImageB.setVisibility(View.GONE);
+        }
 
     }
 
