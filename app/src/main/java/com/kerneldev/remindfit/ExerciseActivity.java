@@ -42,6 +42,7 @@ public class ExerciseActivity extends AppCompatActivity {
         final String name = intent.getStringExtra("ActivityName");
         final String res = intent.getStringExtra("ActivitySource");
         Log.v("ExerciseActivity", "activityID: "+activityID + "name: " + name + "res: " +res);
+        _activityImage.setImageResource(getResources().getIdentifier(res, "drawable", getPackageName()));
 
         _activityCompButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,7 +58,6 @@ public class ExerciseActivity extends AppCompatActivity {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                         String date = sdf.format(new Date());
 
-                        _activityImage.setImageResource(getResources().getIdentifier(res, "drawable", getPackageName()));
 
                         if(database.insertNewUserActivity(userID, activityID, date) != -1){
                             Toast.makeText(getApplicationContext(), "Done!!", Toast.LENGTH_LONG).show();

@@ -75,7 +75,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             notificationManager.notify(777, mNotifyBuilder.build());
         } else {
 
-//            int userID = sharedPreferences.getInt("logged_in_user", -1);
+            //            int userID = sharedPreferences.getInt("logged_in_user", -1);
 //            if(userID == -1 ){
 //
 //                Intent notificationIntent = new Intent(context, SignupActivity.class);

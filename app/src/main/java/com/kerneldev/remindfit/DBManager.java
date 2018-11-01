@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
@@ -118,6 +119,20 @@ public class DBManager {
         return (int) user_details_id;
     }
 
+    int updateUserDetails(int user_id,  String sex, int weight, int height, String blood_group, int age, String start_time, String end_time ) {
+        ContentValues contentValue = new ContentValues();
+        contentValue.put(DBHelper.SEX, sex);
+        contentValue.put(DBHelper.WEIGHT, weight);
+        contentValue.put(DBHelper.HEIGHT, height);
+        contentValue.put(DBHelper.BLOOD_GROUP, blood_group);
+        contentValue.put(DBHelper.AGE, age);
+        contentValue.put(DBHelper.START_TIME, start_time);
+        contentValue.put(DBHelper.END_TIME, end_time);
+
+        long user_details_id = database.update(DBHelper.USER_DETAILS_TABLE, contentValue, ""+DBHelper.USER_ID+"="+user_id, null);
+        return (int) user_details_id;
+    }
+
     public Cursor fetchUserDetails(int userID) {
         String[] columns = new String[] { DBHelper.SEX, DBHelper.WEIGHT, DBHelper.HEIGHT, DBHelper.BLOOD_GROUP, DBHelper.AGE, DBHelper.START_TIME, DBHelper.END_TIME };
         Cursor cursor = database.query(DBHelper.USER_DETAILS_TABLE, columns,  DBHelper.USER_ID+"=?", new String[] { String.valueOf(userID) }, null, null, null);
@@ -133,7 +148,14 @@ public class DBManager {
         contentValue.put(DBHelper.NAME, name);
         contentValue.put(DBHelper.ACTIVITY_RESOURCE, resource);
         contentValue.put(DBHelper.ACTIVITY_TYPE, type);
-        long user_details_id = database.insert(DBHelper.ACTIVITY_TABLE, null, contentValue);
+        long user_details_id = -1;
+
+        try {
+            user_details_id = database.insertOrThrow(DBHelper.ACTIVITY_TABLE, null, contentValue);
+        } catch (android.database.sqlite.SQLiteConstraintException e){
+            Log.e("insertNewActivity", "Resource: "+name + " already exists");
+        }
+
         return (int) user_details_id;
     }
 
@@ -163,6 +185,24 @@ public class DBManager {
         contentValue.put(DBHelper.ACTIVITY_COMPLETED_AT, completedAT);
         long user_details_id = database.insert(DBHelper.USER_ACTIVITY_TABLE, null, contentValue);
         return (int) user_details_id;
+    }
+
+    int getTotalActivities(){
+        String countQuery = "SELECT  * FROM " + DBHelper.ACTIVITY_TABLE;
+        Cursor cursor = database.rawQuery(countQuery, null);
+        int count = cursor.getCount();
+        cursor.close();
+        return count;
+    }
+
+    int getUserCompletedActivities(int userID, String date){
+
+
+        String sql = "SELECT * FROM user_activities WHERE user_id="+userID+"  AND completed_at='"+date+"'";
+        Cursor cursor = database.rawQuery(sql, null);
+        int count = cursor.getCount();
+        cursor.close();
+        return count;
     }
 
 }

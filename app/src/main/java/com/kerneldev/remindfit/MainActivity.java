@@ -1,18 +1,16 @@
 package com.kerneldev.remindfit;
 
-import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +22,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,13 +44,24 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String CHANNEL_ID = "remind_fit";
-    @BindView(R.id.ham_menu) ImageView _hamMenu;
+    @BindView(R.id.ham_menu)
+    ImageView _hamMenu;
     DrawerLayout _navDrawer;
-    @BindView(R.id.app_name) TextView _appName;
-    @BindView(R.id.nav_view) NavigationView _navigationView;
+    @BindView(R.id.app_name)
+    TextView _appName;
+    @BindView(R.id.nav_view)
+    NavigationView _navigationView;
+    @BindView(R.id.bar_chart)
+    BarChart barChart;
+
+    TextView _taskToday;
+    TextView _taskCompleted;
+    TextView _taskPending;
+
 
     SharedPreferences sharedpreferences;
 
+    DBManager database;
 
 
     @Override
@@ -55,7 +76,7 @@ public class MainActivity extends AppCompatActivity
 
         _navDrawer = findViewById(R.id.drawer_layout);
 
-        Typeface custom_font = Typeface.createFromAsset(getAssets(),  "RockSalt.ttf");
+        Typeface custom_font = Typeface.createFromAsset(getAssets(), "RockSalt.ttf");
 
         _appName.setTypeface(custom_font);
 
@@ -65,7 +86,8 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
 
-                if(!_navDrawer.isDrawerOpen(GravityCompat.START)) _navDrawer.openDrawer(Gravity.START);
+                if (!_navDrawer.isDrawerOpen(GravityCompat.START))
+                    _navDrawer.openDrawer(Gravity.START);
                 else _navDrawer.closeDrawer(Gravity.END);
             }
         });
@@ -75,14 +97,26 @@ public class MainActivity extends AppCompatActivity
 
         populateActivityTable();
 
+
+        setActivityBarChart();
     }
 
+    private int[] getColors() {
+
+        // have as many colors as stack-values per entry
+        int[] colors = new int[2];
+//
+//        colors[0] = R.attr.colorPrimary;
+        System.arraycopy(ColorTemplate.MATERIAL_COLORS, 0, colors, 0, 2);
+
+        return colors;
+    }
 
     @Override
     protected void onResume() {
         boolean isLoggedIn = sharedpreferences.getBoolean("is_logged_in", false);
 
-        if(isLoggedIn){
+        if (isLoggedIn) {
             Toast.makeText(getBaseContext(), "Welcome Back!", Toast.LENGTH_SHORT).show();
         } else {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -111,31 +145,110 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        //logout option click
-//        if (id == R.id.action_logout) {
-//            logout();
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
+    void setActivityBarChart() {
+
+        boolean isLoggedIn = sharedpreferences.getBoolean("is_logged_in", false);
+
+        if (isLoggedIn) {
+            database = new DBManager(getApplicationContext());
+            database.open();
+
+            int userID = sharedpreferences.getInt("logged_in_user", -1);
+
+
+            int totalActivities = database.getTotalActivities();
+            int userCompltetedActivities;
+
+            _taskToday = findViewById(R.id.task_today);
+            _taskToday.setText(String.valueOf(totalActivities));
+
+
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+            String[] datesX = new String[8];
+
+            SimpleDateFormat xFormat = new SimpleDateFormat("dd MMM");
+
+            datesX[0] = "";
+
+
+            int j;
+
+            ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
+
+
+            for (j = 1; j <= 7; j++) {
+
+                Calendar c = Calendar.getInstance();
+                c.setTime(new Date()); // Now use today date.
+                c.add(Calendar.DATE, -(7-j));
+                String date = sdf.format(c.getTime());
+                datesX[j] = xFormat.format(c.getTime());
+
+                userCompltetedActivities = database.getUserCompletedActivities(userID, date);
+
+                Log.v("Actcomp", "On "+date+" "+userCompltetedActivities);
+
+                yVals1.add(new BarEntry(
+                        j,
+                        new float[]{userCompltetedActivities, totalActivities - userCompltetedActivities},
+                        null));
+
+                if(j == 7){
+
+                    _taskCompleted = findViewById(R.id.task_completed);
+                    _taskPending = findViewById(R.id.task_pending);
+
+                    _taskCompleted.setText(String.valueOf(userCompltetedActivities));
+                    _taskPending.setText(String.valueOf(totalActivities - userCompltetedActivities));
+                }
+            }
+
+            database.close();
+
+
+            BarDataSet set1;
+
+            if (barChart.getData() != null &&
+                    barChart.getData().getDataSetCount() > 0) {
+                set1 = (BarDataSet) barChart.getData().getDataSetByIndex(0);
+                set1.setValues(yVals1);
+                barChart.getData().notifyDataChanged();
+                barChart.notifyDataSetChanged();
+            } else {
+                set1 = new BarDataSet(yVals1, "[Activity Statistics]");
+                set1.setDrawIcons(false);
+                set1.setColors(getColors());
+                set1.setStackLabels(new String[]{"Completed", "Missed",});
+
+                ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
+                dataSets.add(set1);
+
+                BarData data = new BarData(dataSets);
+//                data.setValueFormatter(new MyValueFormatter());
+                data.setValueTextColor(Color.BLACK);
+
+                Description d = new Description();
+                d.setText("Last 7 Days");
+                barChart.setDescription(d);
+
+                XAxis xAxis = barChart.getXAxis();
+//                xAxis.setPosition(XAxis.XAxisPosition.TOP_INSIDE );
+
+
+
+                xAxis.setValueFormatter(new MyXAxisValueFormatter(datesX));
+
+                barChart.setData(data);
+
+            }
+
+            barChart.setFitBars(true);
+            barChart.invalidate();
+        }
+
+    }
 
 
     @Override
@@ -162,7 +275,7 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_logout) {
             logout();
             // Handle the camera action
-        } else if (id == R.id.nav_profile){
+        } else if (id == R.id.nav_profile) {
             Intent profileActivity = new Intent(getApplicationContext(), ProfileActivity.class);
             startActivity(profileActivity);
         }
@@ -170,7 +283,7 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    void logout(){
+    void logout() {
 
         unSetUserPreferences();
 
@@ -181,8 +294,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-    void setUserPreferences(){
+    void setUserPreferences() {
         DBManager database = new DBManager(getApplicationContext());
         database.open();
 
@@ -190,7 +302,7 @@ public class MainActivity extends AppCompatActivity
 
         Cursor cursor = database.fetchUser(id);
 
-        if (cursor.getCount() > 0){
+        if (cursor.getCount() > 0) {
             SharedPreferences.Editor editor = sharedpreferences.edit();
             editor.putString("user_name", cursor.getString(cursor.getColumnIndex("name")));
             editor.putString("user_email", cursor.getString(cursor.getColumnIndex("email")));
@@ -205,7 +317,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    void unSetUserPreferences(){
+    void unSetUserPreferences() {
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putBoolean("is_logged_in", false);
         editor.putInt("logged_in_user", -1);
@@ -216,17 +328,17 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    void setNavDrawer(){
+    void setNavDrawer() {
 
         View headerView = _navigationView.getHeaderView(0);
-        TextView navDrawerName =  headerView.findViewById(R.id.nav_drawer_name);
-        TextView navDrawerEmail =  headerView.findViewById(R.id.nav_drawer_email);
+        TextView navDrawerName = headerView.findViewById(R.id.nav_drawer_name);
+        TextView navDrawerEmail = headerView.findViewById(R.id.nav_drawer_email);
         navDrawerEmail.setText(sharedpreferences.getString("user_email", null));
         navDrawerName.setText(sharedpreferences.getString("user_name", null));
     }
 
 
-    void populateActivityTable(){
+    void populateActivityTable() {
         DBManager database = new DBManager(getApplicationContext());
         database.open();
 
@@ -234,8 +346,8 @@ public class MainActivity extends AppCompatActivity
 
         for (String activity : activities) {
             //resource string is activity name without spaces and lowercase
-            if (database.insertNewActivity(activity, activity.replaceAll("[^A-Za-z]+", "").toLowerCase(), "fitness") == -1){
-                Log.e("populateActivityTable", "Error inseting "+activity);
+            if (database.insertNewActivity(activity, activity.replaceAll("[^A-Za-z]+", "").toLowerCase(), "fitness") == -1) {
+                Log.e("populateActivityTable", "Error inseting " + activity);
             }
         }
 
