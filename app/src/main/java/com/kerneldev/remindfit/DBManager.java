@@ -44,8 +44,8 @@ public class DBManager {
         return (int) userid;
     }
 
-    public Cursor fetchUser(int id) {
-        String[] columns = new String[] { DBHelper._ID, DBHelper.NAME, DBHelper.EMAIL, DBHelper.MOBILE };
+    Cursor fetchUser(int id) {
+        String[] columns = new String[] { DBHelper._ID, DBHelper.NAME, DBHelper.EMAIL };
         Cursor cursor = database.query(DBHelper.USER_TABLE, columns,  DBHelper._ID+"=?", new String[] { String.valueOf(id) }, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();

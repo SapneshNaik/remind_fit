@@ -138,6 +138,7 @@
                 android:textSize="18sp"
                 app:layout_constraintBottom_toTopOf="@+id/divider"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.65"
                 app:layout_constraintStart_toEndOf="@+id/textView3"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -202,14 +203,13 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginLeft="8dp"
                 android:layout_marginBottom="8dp"
-                android:text="Tasks Pending"
+                android:inputType="number"
+                android:text="Tasks Pending:"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/divider2"
-                android:inputType="number"
-                />
+                app:layout_constraintTop_toBottomOf="@+id/divider2" />
 
             <TextView
                 android:id="@+id/task_pending"

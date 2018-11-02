@@ -29,6 +29,7 @@ import android.widget.Toast;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
@@ -63,10 +64,12 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.profile_image)
     CircleImageView _profileImage;
 
+    @BindView(R.id.task_today)
     TextView _taskToday;
+    @BindView(R.id.task_completed)
     TextView _taskCompleted;
+    @BindView(R.id.task_pending)
     TextView _taskPending;
-
 
     SharedPreferences sharedpreferences;
 
@@ -86,12 +89,13 @@ public class MainActivity extends AppCompatActivity
 
         _navDrawer = findViewById(R.id.drawer_layout);
 
+        //set RockSalt font to app name
         Typeface custom_font = Typeface.createFromAsset(getAssets(), "RockSalt.ttf");
-
         _appName.setTypeface(custom_font);
 
         sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
 
+        //open navigation drawer on hamMenu clcik
         _hamMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -108,45 +112,6 @@ public class MainActivity extends AppCompatActivity
         populateActivityTable();
 
 
-        setActivityBarChart();
-
-
-    }
-
-    private void setProfileImages() {
-       String name =  sharedpreferences.getInt("logged_in_user", -1)+ ".jpg";
-
-        String dirPath = getFilesDir().getAbsolutePath() + File.separator + getString(R.string.app_profile_folder);
-
-        name = dirPath + File.separator + name;
-
-        File file = new File(name);
-        if(file.exists()){
-            Uri uri = Uri.parse(name);
-
-            _profileImage.setImageURI(null);
-            _profileImage.setImageURI(uri);
-
-            View headerView = _navigationView.getHeaderView(0);
-
-            CircleImageView _navProfImage = headerView.findViewById(R.id.nav_drawer_profile);
-            _navProfImage.setImageURI(null);
-
-            _navProfImage.setImageURI(uri);
-
-        }
-
-    }
-
-    private int[] getColors() {
-
-        // have as many colors as stack-values per entry
-        int[] colors = new int[2];
-//
-//        colors[0] = R.attr.colorPrimary;
-        System.arraycopy(ColorTemplate.MATERIAL_COLORS, 0, colors, 0, 2);
-
-        return colors;
     }
 
     @Override
@@ -154,17 +119,68 @@ public class MainActivity extends AppCompatActivity
         boolean isLoggedIn = sharedpreferences.getBoolean("is_logged_in", false);
 
         if (isLoggedIn) {
-            Toast.makeText(getBaseContext(), "Welcome Back!", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getBaseContext(), "Welcome Back!", Toast.LENGTH_SHORT).show();
             setProfileImages();
+            setActivityBarChart();
+            setUserPreferences();
         } else {
+            unSetUserPreferences();
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
 
-        setUserPreferences();
-        setNavDrawer();
 
+        setNavDrawer();
         super.onResume();
+    }
+
+
+    /*
+    Set profile and navigation drawer image as user selected image from internal storage (if exists)
+    or else set the default profile and nav drawer images
+     */
+    private void setProfileImages() {
+
+        //TODO store the image path in DB and fetch from there. Below method may break
+        //file name is <userID>.jpg
+        String imageName = sharedpreferences.getInt("logged_in_user", -1) + ".jpg";
+
+        //file is stored in internal storage of our app
+        String name = getFilesDir().getAbsolutePath() + File.separator + getString(R.string.app_profile_folder) + File.separator + imageName;
+
+
+        View headerView = _navigationView.getHeaderView(0);
+        CircleImageView _navProfImage = headerView.findViewById(R.id.nav_drawer_profile);
+
+        //check if the file exists
+        File file = new File(name);
+        if (file.exists()) {
+            Uri uri = Uri.parse(name);
+
+            //needed because in the case where URI is same (but image might be different) imageView does not update.
+            _profileImage.setImageURI(null);
+            _navProfImage.setImageURI(null);
+
+            _profileImage.setImageURI(uri);
+            _navProfImage.setImageURI(uri);
+
+        } else {
+
+            //set default images as the profile image does not exists
+            _profileImage.setImageResource(R.drawable.profile_1);
+            _navProfImage.setImageResource(R.drawable.profile_1);
+        }
+
+    }
+
+    /*
+    Set colors for the stacked bar chart
+     */
+    private int[] getColors() {
+        int[] colors = new int[2];
+        colors[0] = ColorTemplate.rgb("#ff6d00");
+        colors[1] = ColorTemplate.rgb("#CCCCCC");
+        return colors;
     }
 
 
@@ -188,106 +204,93 @@ public class MainActivity extends AppCompatActivity
 
     void setActivityBarChart() {
 
-        boolean isLoggedIn = sharedpreferences.getBoolean("is_logged_in", false);
+        database = new DBManager(getApplicationContext());
+        database.open();
 
-        if (isLoggedIn) {
-            database = new DBManager(getApplicationContext());
-            database.open();
-
-            int userID = sharedpreferences.getInt("logged_in_user", -1);
+        int userID = sharedpreferences.getInt("logged_in_user", -1);
 
 
-            int totalActivities = database.getTotalActivities();
-            int userCompltetedActivities;
+        int totalActivities = database.getTotalActivities();
+        int userCompletedActivities;
 
-            _taskToday = findViewById(R.id.task_today);
-            _taskToday.setText(String.valueOf(totalActivities));
-
+        _taskToday.setText(String.valueOf(totalActivities));
 
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-            String[] datesX = new String[8];
+        String[] datesX = new String[8];
 
-            SimpleDateFormat xFormat = new SimpleDateFormat("dd MMM");
+        SimpleDateFormat xFormat = new SimpleDateFormat("dd MMM");
 
-            datesX[0] = "";
-
-
-            int j;
-
-            ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
+        datesX[0] = "";
 
 
-            for (j = 1; j <= 7; j++) {
+        int j;
 
-                Calendar c = Calendar.getInstance();
-                c.setTime(new Date()); // Now use today date.
-                c.add(Calendar.DATE, -(7-j));
-                String date = sdf.format(c.getTime());
-                datesX[j] = xFormat.format(c.getTime());
+        ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
 
-                userCompltetedActivities = database.getUserCompletedActivities(userID, date);
 
-                Log.v("Actcomp", "On "+date+" "+userCompltetedActivities);
+        for (j = 1; j <= 7; j++) {
 
-                yVals1.add(new BarEntry(
-                        j,
-                        new float[]{userCompltetedActivities, totalActivities - userCompltetedActivities},
-                        null));
+            Calendar c = Calendar.getInstance();
+            c.setTime(new Date()); // Now use today date.
+            c.add(Calendar.DATE, -(7 - j));
+            String date = sdf.format(c.getTime());
+            datesX[j] = xFormat.format(c.getTime());
 
-                if(j == 7){
+            userCompletedActivities = database.getUserCompletedActivities(userID, date);
 
-                    _taskCompleted = findViewById(R.id.task_completed);
-                    _taskPending = findViewById(R.id.task_pending);
+            if (j == 7) {
+                datesX[j] = "*"+xFormat.format(c.getTime());
 
-                    _taskCompleted.setText(String.valueOf(userCompltetedActivities));
-                    _taskPending.setText(String.valueOf(totalActivities - userCompltetedActivities));
-                }
+                _taskCompleted.setText(String.valueOf(userCompletedActivities));
+                _taskPending.setText(String.valueOf(totalActivities - userCompletedActivities));
             }
 
-            database.close();
+            yVals1.add(new BarEntry(
+                    j,
+                    new float[]{userCompletedActivities, totalActivities - userCompletedActivities},
+                    null));
 
 
-            BarDataSet set1;
-
-            if (barChart.getData() != null &&
-                    barChart.getData().getDataSetCount() > 0) {
-                set1 = (BarDataSet) barChart.getData().getDataSetByIndex(0);
-                set1.setValues(yVals1);
-                barChart.getData().notifyDataChanged();
-                barChart.notifyDataSetChanged();
-            } else {
-                set1 = new BarDataSet(yVals1, "[Activity Statistics]");
-                set1.setDrawIcons(false);
-                set1.setColors(getColors());
-                set1.setStackLabels(new String[]{"Completed", "Missed",});
-
-                ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
-                dataSets.add(set1);
-
-                BarData data = new BarData(dataSets);
-//                data.setValueFormatter(new MyValueFormatter());
-                data.setValueTextColor(Color.BLACK);
-
-                Description d = new Description();
-                d.setText("Last 7 Days");
-                barChart.setDescription(d);
-
-                XAxis xAxis = barChart.getXAxis();
-//                xAxis.setPosition(XAxis.XAxisPosition.TOP_INSIDE );
-
-
-
-                xAxis.setValueFormatter(new MyXAxisValueFormatter(datesX));
-
-                barChart.setData(data);
-
-            }
-
-            barChart.setFitBars(true);
-            barChart.invalidate();
         }
+
+        database.close();
+
+
+        BarDataSet set1;
+
+        if (barChart.getData() != null &&
+                barChart.getData().getDataSetCount() > 0) {
+            set1 = (BarDataSet) barChart.getData().getDataSetByIndex(0);
+            set1.setValues(yVals1);
+            barChart.getData().notifyDataChanged();
+            barChart.notifyDataSetChanged();
+        } else {
+            set1 = new BarDataSet(yVals1, "[Activity Statistics]");
+            set1.setDrawIcons(false);
+            set1.setColors(getColors());
+            set1.setStackLabels(new String[]{"Completed", "Missed/Pending",});
+
+            ArrayList<IBarDataSet> dataSets = new ArrayList<>();
+            dataSets.add(set1);
+            BarData data = new BarData(dataSets);
+            data.setValueTextColor(R.color.primary_dark);
+            Description d = new Description();
+            d.setText("Last 7 Days");
+            barChart.setDescription(d);
+            XAxis xAxis = barChart.getXAxis();
+            xAxis.setValueFormatter(new MyXAxisValueFormatter(datesX));
+
+            barChart.setNoDataText("No Activity History Available");
+            barChart.setClickable(false);
+            barChart.setPinchZoom(false);
+            barChart.setData(data);
+
+        }
+
+        barChart.setFitBars(true);
+        barChart.invalidate();
 
     }
 
@@ -335,6 +338,11 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    /*
+      set Shared Preferences for logged in user
+      user_name => name,
+      user_email => email
+     */
     void setUserPreferences() {
         DBManager database = new DBManager(getApplicationContext());
         database.open();
@@ -347,10 +355,8 @@ public class MainActivity extends AppCompatActivity
             SharedPreferences.Editor editor = sharedpreferences.edit();
             editor.putString("user_name", cursor.getString(cursor.getColumnIndex("name")));
             editor.putString("user_email", cursor.getString(cursor.getColumnIndex("email")));
-            editor.putString("user_mobile", cursor.getString(cursor.getColumnIndex("mobile")));
+//            editor.putString("user_mobile", cursor.getString(cursor.getColumnIndex("mobile")));
             editor.apply();
-        } else {
-            unSetUserPreferences();
         }
         cursor.close();
         database.close();
@@ -364,7 +370,7 @@ public class MainActivity extends AppCompatActivity
         editor.putInt("logged_in_user", -1);
         editor.putString("user_name", null);
         editor.putString("user_email", null);
-        editor.putString("user_mobile", null);
+//        editor.putString("user_mobile", null);
         editor.apply();
     }
 
@@ -388,7 +394,7 @@ public class MainActivity extends AppCompatActivity
         for (String activity : activities) {
             //resource string is activity name without spaces and lowercase
             if (database.insertNewActivity(activity, activity.replaceAll("[^A-Za-z]+", "").toLowerCase(), "fitness") == -1) {
-                Log.e("populateActivityTable", "Error inseting " + activity);
+                Log.e("populateActivityTable", "Error inserting " + activity);
             }
         }
 
