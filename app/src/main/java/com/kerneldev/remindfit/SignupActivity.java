@@ -1,12 +1,9 @@
 package com.kerneldev.remindfit;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,7 +34,7 @@ public class SignupActivity extends AppCompatActivity {
         _signupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                signup();
+                signUp();
             }
         });
 
@@ -61,14 +58,12 @@ public class SignupActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    public void signup() {
-
-
+    public void signUp() {
         database = new DBManager(getApplicationContext());
         database.open();
 
         if (!validate()) {
-            onSignupFailed();
+            onSignUpFailed();
             return;
         }
 
@@ -97,19 +92,19 @@ public class SignupActivity extends AppCompatActivity {
          */
 
 
-        int userid = database.insertUser(name, email, mobile, password);
-        if(userid != -1) onSignupSuccess(userid);
-        else onSignupFailed();
+        int userID = database.insertUser(name, email, mobile, password);
+        if(userID != -1) onSignupSuccess(userID);
+        else onSignUpFailed();
         progressDialog.dismiss();
     }
 
 
-    public void onSignupSuccess(int userid) {
+    public void onSignupSuccess(int userID) {
 //        database.fetchAll();
 //        SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
 //        SharedPreferences.Editor editor = sharedpreferences.edit();
 //        editor.putBoolean("is_logged_in", true);
-//        editor.putInt("logged_in_user", userid);
+//        editor.putInt("logged_in_user", userID);
 //        editor.apply();
 
         database.close();
@@ -123,7 +118,7 @@ public class SignupActivity extends AppCompatActivity {
         finish();
     }
 
-    public void onSignupFailed() {
+    public void onSignUpFailed() {
         Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
 
         _signupButton.setEnabled(true);

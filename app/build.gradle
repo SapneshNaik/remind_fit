@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.kerneldev.remindfit"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -35,4 +35,5 @@ dependencies {
     implementation 'com.github.tittojose:timerangepicker-library:0.2'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.4'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.15'
 }

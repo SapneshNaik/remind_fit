@@ -9,11 +9,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
@@ -29,19 +26,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Objects;
+
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -55,7 +48,6 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
     Button _timePeriodSelectButton;
     @BindView(R.id.save_prof_details)
     Button _saveProfDetails;
-
     @BindView(R.id.male)
     RadioButton _maleRadio;
     @BindView(R.id.female)
@@ -70,13 +62,11 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
     TextInputEditText _heightInput;
     @BindView(R.id.app_name)
     TextView _appName;
-
     @BindView(R.id.uploadProfileImage)
     FloatingActionButton _uploadImageB;
-
-
     @BindView(R.id.profile_image)
     CircleImageView _profileImage;
+
 
     SharedPreferences sharedpreferences;
     DBManager database;
@@ -87,11 +77,8 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
     int userId;
 
-
     public static final String TIMERANGEPICKER_TAG = "timerangepicker";
 
-    private AlarmManager alarmMgr;
-    private PendingIntent alarmIntent;
     View.OnClickListener showTimePicker = new View.OnClickListener() {
         @Override
         public void onClick(final View v) {
@@ -101,7 +88,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
         }
     };
 
-    View.OnClickListener saveDetais = new View.OnClickListener() {
+    View.OnClickListener saveDetails = new View.OnClickListener() {
         @Override
         public void onClick(final View v) {
             if (validate()) {
@@ -123,9 +110,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
                     database.open();
 
                     if (!dataExists) {
-                        Log.v("saveDetais", "new");
-
-
+                        //add for the first time
                         if (database.insertUserDetails(userId, sex, weight, height, bloodGroup, age, startTime, endTime) != -1) {
                             dataExists = true;
                             onSaveDetailSuccess();
@@ -135,8 +120,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
 
                     } else {
-                        Log.v("saveDetais", "update");
-
+                        //update
                         if (database.updateUserDetails(userId, sex, weight, height, bloodGroup, age, startTime, endTime) != -1) {
                             onUpdateDetailSuccess();
                         } else {
@@ -146,9 +130,9 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
                     database.close();
 
-                    alarmMgr = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                    AlarmManager alarmMgr = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
                     Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-                    alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 777, intent, 0);
+                    PendingIntent alarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 777, intent, 0);
 
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTimeInMillis(System.currentTimeMillis());
@@ -190,8 +174,6 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
                 _profileImage.setImageURI(imageUri);
 
-//                _uploadImageB.setVisibility(View.GONE);
-
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         != PackageManager.PERMISSION_GRANTED) {
                     askStoragePermission();
@@ -209,7 +191,6 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
 
     void askStoragePermission() {
-
         // Permission is not granted
         // Should we show an explanation?
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -219,16 +200,13 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
             // sees the explanation, try again to request the permission.
         } else {
             // No explanation needed; request the permission
+            // MY_PERMISSIONS_REQUEST_WRITE_STORAGE is an
+            // app-defined int constant. The callback method gets the
+            // result of the request.
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
-
-            // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-            // app-defined int constant. The callback method gets the
-            // result of the request.
         }
-
-
     }
 
 
@@ -254,7 +232,9 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
-                    Log.v("StoragePerm", "denied");
+                    Toast.makeText(this, "Please provide storage permission", Toast.LENGTH_LONG).show();
+
+                    Log.e("StoragePerm", "denied");
 
                 }
                 return;
@@ -265,14 +245,13 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
         }
     }
 
+    //create data/files/profile_images folder for profile picture storage
     String createProfileImagesFolder() {
         String dirPath = getFilesDir().getAbsolutePath() + File.separator + getString(R.string.app_profile_folder);
         File projDir = new File(dirPath);
         if (!projDir.exists())
             projDir.mkdirs();
-
         return dirPath;
-
     }
 
     private void saveProfileImage(Uri imageUri) throws IOException {
@@ -286,10 +265,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
         File file = new File(dir, name);
 
-        InputStream in = getContentResolver().openInputStream(imageUri);
-        OutputStream out = new FileOutputStream(file);  // I'm assuming you already have the File object for where you're writing to
-
-        try {
+        try (InputStream in = getContentResolver().openInputStream(imageUri); OutputStream out = new FileOutputStream(file)) {
             int bytesRead;
             while ((bytesRead = in.read(imageData)) > 0) {
                 out.write(Arrays.copyOfRange(imageData, 0, Math.max(0, bytesRead)));
@@ -297,23 +273,8 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
 
         } catch (Exception ex) {
             Log.e("Something went wrong.", "sd", ex);
-        } finally {
-            in.close();
-            out.close();
         }
     }
-
-    public String getPath(Uri uri) {
-        String[] projection = {MediaStore.MediaColumns.DATA};
-        Cursor cursor = managedQuery(uri, projection, null, null, null);
-        int column_index = cursor
-                .getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        cursor.moveToFirst();
-//        String imagePath = cursor.getString(column_index);
-
-        return cursor.getString(column_index);
-    }
-
 
     void onSaveDetailSuccess() {
         Toast.makeText(getApplicationContext(), "Details Saved", Toast.LENGTH_SHORT).show();
@@ -336,21 +297,21 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
         String age = _ageInput.getText().toString();
 
         if (weight.isEmpty()) {
-            _weightInput.setError("Please enter your weight");
+            _weightInput.setError("Please enter your Weight");
             valid = false;
         } else {
             _weightInput.setError(null);
         }
 
         if (height.isEmpty()) {
-            _heightInput.setError("Please enter your height");
+            _heightInput.setError("Please enter your Height");
             valid = false;
         } else {
             _heightInput.setError(null);
         }
 
         if (age.isEmpty()) {
-            _ageInput.setError("Please enter your age");
+            _ageInput.setError("Please enter your Age");
             valid = false;
         } else {
             _ageInput.setError(null);
@@ -370,7 +331,7 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
         _appName.setTypeface(custom_font);
 
         _timePeriodSelectButton.setOnClickListener(showTimePicker);
-        _saveProfDetails.setOnClickListener(saveDetais);
+        _saveProfDetails.setOnClickListener(saveDetails);
         sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
 
         //selecting male by default
@@ -436,6 +397,9 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
     }
 
 
+    /*
+    Populate existing user details
+     */
     void populateDetails() {
 
         database = new DBManager(getApplicationContext());
@@ -460,9 +424,6 @@ public class ProfileActivity extends AppCompatActivity implements TimeRangePicke
             String time = cursor.getString(cursor.getColumnIndex(DBHelper.START_TIME)) + " - " + cursor.getString(cursor.getColumnIndex(DBHelper.END_TIME));
 
             _timePeriodSelectButton.setText(time);
-
-            Log.v("Userdetails", DatabaseUtils.dumpCursorToString(cursor));
-
 
             //set blood group spinner value
             ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.blood_groups, android.R.layout.simple_spinner_item);

@@ -6,13 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -20,8 +18,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,7 +25,6 @@ import android.widget.Toast;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
@@ -241,7 +236,7 @@ public class MainActivity extends AppCompatActivity
             userCompletedActivities = database.getUserCompletedActivities(userID, date);
 
             if (j == 7) {
-                datesX[j] = "*"+xFormat.format(c.getTime());
+                datesX[j] = "Today";
 
                 _taskCompleted.setText(String.valueOf(userCompletedActivities));
                 _taskPending.setText(String.valueOf(totalActivities - userCompletedActivities));
@@ -289,6 +284,7 @@ public class MainActivity extends AppCompatActivity
 
         }
 
+        barChart.animateY(2000);
         barChart.setFitBars(true);
         barChart.invalidate();
 
@@ -319,9 +315,12 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_logout) {
             logout();
             // Handle the camera action
+            overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+
         } else if (id == R.id.nav_profile) {
             Intent profileActivity = new Intent(getApplicationContext(), ProfileActivity.class);
             startActivity(profileActivity);
+            overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
         }
 
         return true;
@@ -389,11 +388,11 @@ public class MainActivity extends AppCompatActivity
         DBManager database = new DBManager(getApplicationContext());
         database.open();
 
-        String[] activities = {"Drink Water", "Meditate", "Do Push Ups", "Do Pull Ups", "Short Run", "Eye Exercise"};
+        String[] activities = {"Drink Water", "Meditate", "Do Push Ups", "Do Pull Ups", "Do Sit Ups","Short Run", "Eye Exercise"};
 
         for (String activity : activities) {
             //resource string is activity name without spaces and lowercase
-            if (database.insertNewActivity(activity, activity.replaceAll("[^A-Za-z]+", "").toLowerCase(), "fitness") == -1) {
+            if (database.insertNewActivity(activity, activity.replaceAll("[^A-Za-z]+", "").toLowerCase()) == -1) {
                 Log.e("populateActivityTable", "Error inserting " + activity);
             }
         }

@@ -1,11 +1,9 @@
 package com.kerneldev.remindfit;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import android.content.Intent;
 import android.view.View;
@@ -26,7 +24,7 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.input_email) EditText _emailText;
     @BindView(R.id.input_password) EditText _passwordText;
     @BindView(R.id.btn_login) Button _loginButton;
-    @BindView(R.id.link_signup) TextView _signupLink;
+    @BindView(R.id.link_signup) TextView _signUpLink;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,15 +33,13 @@ public class LoginActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         _loginButton.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 login();
             }
         });
 
-        _signupLink.setOnClickListener(new View.OnClickListener() {
-
+        _signUpLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Start the Signup activity
@@ -58,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        //try to close database on app kill
         if(database != null){
             database.close();
         }
@@ -68,8 +65,6 @@ public class LoginActivity extends AppCompatActivity {
         database = new DBManager(getApplicationContext());
         database.open();
 
-        Log.d(TAG, "Login");
-
         if (!validate()) {
             onLoginFailed(false);
             return;
@@ -77,21 +72,18 @@ public class LoginActivity extends AppCompatActivity {
 
         _loginButton.setEnabled(false);
 
-        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Authenticating...");
-        progressDialog.show();
+//        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
+//                R.style.AppTheme_Dark_Dialog);
+//        progressDialog.setIndeterminate(true);
+//        progressDialog.setMessage("Authenticating...");
+//        progressDialog.show();
 
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+        int userID = database.validUser(_emailText.getText().toString(), _passwordText.getText().toString());
 
-        int userid = database.validUser(email, password);
-
-        if( userid != -1 ) onLoginSuccess(userid);
+        if( userID != -1 ) onLoginSuccess(userID);
         else onLoginFailed(true);
 
-        progressDialog.dismiss();
+//        progressDialog.dismiss();
     }
 
 
@@ -99,8 +91,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_SIGNUP) {
             if (resultCode == RESULT_OK) {
-
-
                 // By default we just finish the Activity and log them in automatically
                 this.finish();
             }
@@ -113,16 +103,20 @@ public class LoginActivity extends AppCompatActivity {
         moveTaskToBack(true);
     }
 
-    public void onLoginSuccess(int userid) {
+    /*
+    Set Shared Preferences and move to Main Activity
+     */
+    public void onLoginSuccess(int userID) {
 
-        Toast.makeText(getBaseContext(), "Logged in", Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), "Welcome", Toast.LENGTH_LONG).show();
 
         SharedPreferences sharedpreferences = getSharedPreferences("remindfit", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putBoolean("is_logged_in", true);
-        editor.putInt("logged_in_user", userid);
+        editor.putInt("logged_in_user", userID);
         editor.apply();
         database.close();
+
         _loginButton.setEnabled(true);
         finish();
     }
@@ -130,12 +124,15 @@ public class LoginActivity extends AppCompatActivity {
     public void onLoginFailed(boolean wrongCreds) {
 
         if(wrongCreds){
-            Toast.makeText(getBaseContext(), "Invalid email or password", Toast.LENGTH_LONG).show();
+            Toast.makeText(getBaseContext(), "Invalid Email or Password", Toast.LENGTH_LONG).show();
         }
 
         _loginButton.setEnabled(true);
     }
 
+    /*
+    Basic email and password validation
+     */
     public boolean validate() {
         boolean valid = true;
 

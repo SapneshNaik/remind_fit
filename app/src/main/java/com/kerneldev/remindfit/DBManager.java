@@ -3,16 +3,14 @@ package com.kerneldev.remindfit;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.SQLException;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class DBManager {
+class DBManager {
     private DBHelper dbHelper;
 
     private Context context;
@@ -23,10 +21,9 @@ public class DBManager {
         context = c;
     }
 
-    DBManager open() throws SQLException {
+    void open() throws SQLException {
         dbHelper = new DBHelper(context);
         database = dbHelper.getWritableDatabase();
-        return this;
     }
 
     void close() {
@@ -39,9 +36,9 @@ public class DBManager {
         contentValue.put(DBHelper.EMAIL, email);
         contentValue.put(DBHelper.MOBILE, mobile);
         contentValue.put(DBHelper.PASSWORD, password);
-        long userid = database.insert(DBHelper.USER_TABLE, null, contentValue);
+        long userID = database.insert(DBHelper.USER_TABLE, null, contentValue);
 
-        return (int) userid;
+        return (int) userID;
     }
 
     Cursor fetchUser(int id) {
@@ -53,24 +50,14 @@ public class DBManager {
         return cursor;
     }
 
-//    void fetchAll() {
-//        String[] columns = new String[] { DBHelper._ID, DBHelper.NAME, DBHelper.EMAIL, DBHelper.MOBILE };
-//        Cursor cursor = database.query(DBHelper.USER_TABLE, columns,  null,null, null, null, null);
-//        if (cursor != null) {
-//            cursor.moveToFirst();
-//        }
-//        Log.v("Cursor Object", DatabaseUtils.dumpCursorToString(cursor));
-//        cursor.close();
-//    }
-
     int validUser(String email, String password) {
         String[] columns = new String[] { DBHelper._ID };
         Cursor cursor = database.query(DBHelper.USER_TABLE, columns,  DBHelper.EMAIL+"=? and "+DBHelper.PASSWORD+"=?", new String[] { email, password }, null, null, null);
         cursor.moveToFirst();
         if (cursor.getCount() > 0) {
-            int userid = cursor.getInt(cursor.getColumnIndex("_id"));
+            int userID = cursor.getInt(cursor.getColumnIndex("_id"));
             cursor.close();
-            return userid;
+            return userID;
         } else {
             cursor.close();
             return -1;
@@ -90,7 +77,7 @@ public class DBManager {
         }
     }
 
-    public boolean mobileExists(String mobile) {
+    boolean mobileExists(String mobile) {
         String sql = "SELECT EXISTS (SELECT * FROM "+DBHelper.USER_TABLE+" WHERE "+DBHelper.MOBILE+"='"+mobile+"' LIMIT 1)";
         Cursor cursor = database.rawQuery(sql, null);
         cursor.moveToFirst();
@@ -133,7 +120,7 @@ public class DBManager {
         return (int) user_details_id;
     }
 
-    public Cursor fetchUserDetails(int userID) {
+    Cursor fetchUserDetails(int userID) {
         String[] columns = new String[] { DBHelper.SEX, DBHelper.WEIGHT, DBHelper.HEIGHT, DBHelper.BLOOD_GROUP, DBHelper.AGE, DBHelper.START_TIME, DBHelper.END_TIME };
         Cursor cursor = database.query(DBHelper.USER_DETAILS_TABLE, columns,  DBHelper.USER_ID+"=?", new String[] { String.valueOf(userID) }, null, null, null);
         if (cursor != null) {
@@ -143,11 +130,11 @@ public class DBManager {
     }
 
 
-    int insertNewActivity(String name,  String resource, String type ) {
+    int insertNewActivity(String name, String resource) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DBHelper.NAME, name);
         contentValue.put(DBHelper.ACTIVITY_RESOURCE, resource);
-        contentValue.put(DBHelper.ACTIVITY_TYPE, type);
+        contentValue.put(DBHelper.ACTIVITY_TYPE, "fitness");
         long user_details_id = -1;
 
         try {
@@ -178,13 +165,12 @@ public class DBManager {
         return cursor;
     }
 
-    int insertNewUserActivity(int userID,  int activityID, String completedAT ) {
+    void insertNewUserActivity(int userID, int activityID, String completedAT ) {
         ContentValues contentValue = new ContentValues();
         contentValue.put(DBHelper.USER_ID, userID);
         contentValue.put(DBHelper.ACTIVITY_ID, activityID);
         contentValue.put(DBHelper.ACTIVITY_COMPLETED_AT, completedAT);
-        long user_details_id = database.insert(DBHelper.USER_ACTIVITY_TABLE, null, contentValue);
-        return (int) user_details_id;
+        database.insert(DBHelper.USER_ACTIVITY_TABLE, null, contentValue);
     }
 
     int getTotalActivities(){
@@ -196,8 +182,6 @@ public class DBManager {
     }
 
     int getUserCompletedActivities(int userID, String date){
-
-
         String sql = "SELECT * FROM user_activities WHERE user_id="+userID+"  AND completed_at='"+date+"'";
         Cursor cursor = database.rawQuery(sql, null);
         int count = cursor.getCount();
