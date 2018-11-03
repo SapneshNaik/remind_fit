@@ -56,7 +56,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
 
             NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.logo)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("It's time for a new activity!!")
                     .setContentText(name)
                     .setWhen(System.currentTimeMillis())
