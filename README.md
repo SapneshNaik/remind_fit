@@ -17,8 +17,6 @@ Remind Fit is an android application which gently reminds you to do some healthy
 ## Activity animations
 
    <img src="https://raw.githubusercontent.com/SapneshNaik/remind_fit/master/screenshots/drinkwater.gif" width="24%" height=24%>    <img src="https://raw.githubusercontent.com/SapneshNaik/remind_fit/master/screenshots/maditate.gif" width="24%" height=24%>    <img src="https://raw.githubusercontent.com/SapneshNaik/remind_fit/master/screenshots/pullups.gif" width="24%" height=24%> <img src="https://raw.githubusercontent.com/SapneshNaik/remind_fit/master/screenshots/short_run.gif" width="24%" height=24%>
-   
-      <img src="https://raw.githubusercontent.com/SapneshNaik/remind_fit/master/screenshots/profile.png" width="30%" height=30%>&nbsp;&nbsp;       <img src="https://raw.githubusercontent.com/SapneshNaik/remind_fit/master/screenshots/notification.png" width="30%" height=30%>
 
 
 ### Remind-Fit uses a number of open source projects to work properly:
