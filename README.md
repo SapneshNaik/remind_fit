@@ -31,3 +31,7 @@ Remind Fit is an android application which gently reminds you to do some healthy
 * [android-gif-drawable](https://github.com/koral--/android-gif-drawable) - Views and Drawable for displaying animated GIFs on Android.
 * [CircleImageView](https://github.com/hdodenhof/CircleImageView) - A circular ImageView for Android.
 
+
+
+#### I Blog!
+Check out www.kerneldev.com if you're interested in Python, Laravel, PHP, JQuery and JS!
